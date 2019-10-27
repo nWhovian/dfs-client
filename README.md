@@ -1,2 +1,2 @@
 # dfs-client
-JS client for multithreaded file uploading
+JS client for communication with the Distributed File System
