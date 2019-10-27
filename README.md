@@ -1,6 +1,6 @@
 # dfs-client
 
-> a DFS client
+> JS client for communication with the Distributed File System
 
 ## Build Setup
 
