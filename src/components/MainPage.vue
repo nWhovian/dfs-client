@@ -3,6 +3,7 @@
 </template>
 
 <script>
+  import {MainPageAPI} from 'api'
   export default {
     name: "MainPage",
     data() {
@@ -14,7 +15,7 @@
 
     },
     methods() {
-      function divideToChunks(file) {
+      function uploadFile(file) {
         const chunksNumber = Math.ceil(file.size / this.chunkSize);
         const chunksQueue = new Array(chunksNumber).fill().map((_, index) => index).reverse();
 
@@ -25,7 +26,13 @@
           let begin = chunkId * this.chunkSize;
           let currentChunk = file.slice(begin, begin + this.chunkSize);
 
-          uploadFile(currentChunk, chunkId)
+          MainPageAPI.uploadChunk(
+            chunkId.toString(),
+            currentChunk,
+            file.name.toString(),
+            "1",
+            file.size().toString()
+          )
             .then(() => {
               console.log("chunk #" + chunkId + " uploaded successfully");
             })
@@ -37,9 +44,6 @@
         }
 
         console.log("The file uploaded");
-      }
-      function uploadFile() {
-
       }
     }
   }
