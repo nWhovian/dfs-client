@@ -16,8 +16,19 @@
       <button v-on:click="downloadFile()">Download</button>
     </div>
     <div>
+      "ls" comand
       <input type="text" placeholder="directory" v-model="lsDirectory">
       <button v-on:click="lsRequest()">ls command</button>
+    </div>
+    <div>
+      Make a directory
+      <input type="text" placeholder="absolute name of a directory" v-model="mkDirectory">
+      <button v-on:click="mkdirRequest()">mkdir command</button>
+    </div>
+    <div>
+      Delete a directory
+      <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
+      <button v-on:click="delDirRequest()">delete directory command</button>
     </div>
   </div>
 </template>
@@ -35,9 +46,9 @@
         fileName: "",
         datanodeIPsList: {},
         lsDirectory: "",
-
-
+        mkDirectory:"",
         lsList: {},
+        delDirectory: "",
       }
     },
     created: {},
@@ -169,6 +180,36 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
               this.lsList = xhr.response;
               console.log(this.lsList);
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      mkdirRequest(){
+        const directory = this.mkDirectory;
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/mkdir");
+          xhr.setRequestHeader("Directory", directory);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      delDirRequest(){
+        const directory = this.delDirectory;
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/delete_dir");
+          xhr.setRequestHeader("Directory", directory);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
               resolve();
             }
           };
