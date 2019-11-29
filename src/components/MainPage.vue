@@ -15,6 +15,10 @@
       <input type="text" v-model="fileName" placeholder="file">
       <button v-on:click="downloadFile()">Download</button>
     </div>
+    <div>
+      <input type="text" placeholder="directory" v-model="lsDirectory">
+      <button v-on:click="lsRequest()">ls command</button>
+    </div>
   </div>
 </template>
 
@@ -29,7 +33,11 @@
         datanodeIP: "",
         fileStorage: {},
         fileName: "",
-        datanodeIPsList: {}
+        datanodeIPsList: {},
+        lsDirectory: "",
+
+
+        lsList: {},
       }
     },
     created: {},
@@ -144,6 +152,23 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
               this.datanodeIPsList = xhr.response;
               console.log(this.datanodeIPsList);
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      lsRequest() {
+        const directory = this.lsDirectory;
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/ls");
+          xhr.setRequestHeader("Directory", directory);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              this.lsList = xhr.response;
+              console.log(this.lsList);
               resolve();
             }
           };
