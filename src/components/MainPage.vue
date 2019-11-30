@@ -1,34 +1,89 @@
 <template>
   <div>
     <button v-on:click="init()">Init</button>
+    <br>
     <div>
+      Upload a file
+      <br>
       <input type="file" ref="file" placeholder="upload a file">
+      <br>
       <label>
         Path to the file:
         <input type="text" v-model="directory" placeholder="/directory1/directory2">
         File name:
         <input type="text" v-model="name" placeholder="file">
       </label>
-      <button v-on:click="uploadFile()">Upload a file</button>
+      <br>
+      <button v-on:click="uploadFile()">upload file</button>
     </div>
+    <br>
     <div>
-      <input type="text" v-model="fileName" placeholder="file">
-      <button v-on:click="downloadFile()">Download</button>
+      Download a file
+      <input type="text" v-model="downloadfileName" placeholder="absolute name">
+      <button v-on:click="downloadFile()">download file</button>
     </div>
+    <br>
     <div>
-      "ls" comand
-      <input type="text" placeholder="directory" v-model="lsDirectory">
-      <button v-on:click="lsRequest()">ls command</button>
+      Delete a file
+      <input type="text" v-model="deleteFileName" placeholder="absolute name">
+      <button v-on:click="deleteFile()">delete file</button>
     </div>
+    <br>
+    <div>
+      Get information about a file
+      <input type="text" v-model="getInfoFileName" placeholder="absolute name">
+      <button v-on:click="getFileInfo()">get info</button>
+    </div>
+    <br>
+    <div>
+      Copy a file
+      <input type="text" v-model="copyFromFileName" placeholder="absolute name">
+      <br>
+      as:
+      <input type="text" v-model="copyToFileName" placeholder="absolute name">
+      <br>
+      <button v-on:click="copyFile()">copy file</button>
+    </div>
+    <br>
+    <div>
+      Move a file
+      from:
+      <input type="text" v-model="moveFromFileName" placeholder="absolute name">
+      <br>
+      to:
+      <input type="text" v-model="moveToFileName" placeholder="absolute name">
+      <br>
+      <button v-on:click="moveFile()">move file</button>
+    </div>
+    <br>
+    <br>
+    <div>
+      Move to another directory ('cd' command)
+      <input type="text" :placeholder="currentPath" v-model="cdDirectory">
+      <button v-on:click="cdRequest()">move to directory</button>
+    </div>
+    <br>
+    <div>
+      List all files and directories ('ls' command)
+      <br>
+      Current directory: {{currentPath}}
+      <br>
+      Look in another directory (optional):
+      <input type="text" v-model="lsDirectory">
+      <br>
+      <button v-on:click="lsRequest()">list</button>
+    </div>
+    <br>
     <div>
       Make a directory
       <input type="text" placeholder="absolute name of a directory" v-model="mkDirectory">
-      <button v-on:click="mkdirRequest()">mkdir command</button>
+      <button v-on:click="mkdirRequest()">make directory</button>
     </div>
+    <br>
     <div>
       Delete a directory
       <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
-      <button v-on:click="delDirRequest()">delete directory command</button>
+      <button v-on:click="delDirRequest()">delete directory</button>
     </div>
   </div>
 </template>
@@ -39,13 +94,21 @@
     data() {
       return {
         chunkSize: 1 * 1024,
+        currentPath:"/",
         directory: "",
         name: "",
         datanodeIP: "",
         fileStorage: {},
-        fileName: "",
+        downloadfileName: "",
+        deleteFileName: "",
+        getInfoFileName:"",
+        copyFromFileName:"",
+        copyToFileName:"",
+        moveFromFileName:"",
+        moveToFileName:"",
         datanodeIPsList: {},
         lsDirectory: "",
+        cdDirectory: "",
         mkDirectory:"",
         lsList: {},
         delDirectory: "",
@@ -87,7 +150,7 @@
         console.log("The file uploaded");
       },
       async downloadFile() {
-        const fileName = this.fileName;
+        const fileName = this.downloadfileName;
         await this.getDatanodeToDownload(fileName);
         let i = 0;
 
@@ -128,7 +191,6 @@
           xhr.setRequestHeader("File-Name", fileName);
           xhr.setRequestHeader("File-Id", fileId);
           xhr.setRequestHeader("File-Length", fileSize);
-          xhr.setRequestHeader("Replications", '3');
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
               resolve();
