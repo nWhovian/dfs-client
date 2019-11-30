@@ -303,8 +303,32 @@
           xhr.send(null);
         });
       },
+      cdRequest() {
+        const directory = this.cdDirectory;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/cd");
+          xhr.setRequestHeader("Directory", directory);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              this.currentPath = directory;
+              console.log("moved");
+              resolve();
+            } else if (xhr.status === 400) {
+              console.log("no such directory");
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
       lsRequest() {
-        const directory = this.lsDirectory;
+        let directory;
+        if (this.lsDirectory === "") directory = this.currentPath;
+        else directory = this.lsDirectory;
+
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("GET", "http://10.91.86.17:5000/ls");
