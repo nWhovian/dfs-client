@@ -154,10 +154,81 @@
         await this.getDatanodeToDownload(fileName);
         let i = 0;
 
-        let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
+        let reqUrl = "http://" + "10.91.91.190:5000" + "/download";
+        console.log(reqUrl);
         let result = this.downloadRequest(fileName, reqUrl);
-        console.log(result);
+        console.log("result of download", result);
         i++;
+      },
+      deleteFile() {
+        const fileName = this.deleteFileName;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/delete_file");
+          xhr.setRequestHeader("File-Name", fileName);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              console.log("deleted!");
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      getFileInfo() {
+        const fileName = this.getInfoFileName;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/info");
+          xhr.setRequestHeader("File-Name", fileName);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              console.log(xhr.response);
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      copyFile() {
+        const fileName1 = this.copyFromFileName;
+        const fileName2 = this.copyToFileName;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/copy");
+          xhr.setRequestHeader("File-Name-Old", fileName1);
+          xhr.setRequestHeader("File-Name-New", fileName2);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      moveFile() {
+        const fileName1 = this.moveFromFileName;
+        const fileName2 = this.moveToFileName;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/move");
+          xhr.setRequestHeader("File-Name-Old", fileName1);
+          xhr.setRequestHeader("File-Name-New", fileName2);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
       },
       init() {
         return new Promise((resolve, reject) => {
