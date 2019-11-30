@@ -105,6 +105,15 @@
       <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
       <button v-on:click="delDirRequest()">delete directory</button>
     </div>
+
+    <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">
+      <div class="modal-content">
+        <p>Please enter the namenode IP</p>
+        <input type="text" v-model="namenodeIP">
+        <button v-on:click="saveIP()">save</button>
+      </div>
+
+    </div>
   </div>
 </template>
 
@@ -113,6 +122,8 @@
     name: "MainPage",
     data() {
       return {
+        isInitOpen: true,
+        namenodeIP: "",
         chunkSize: 1 * 1024,
         currentPath: "/",
         directory: "",
@@ -139,6 +150,9 @@
     },
     created: {},
     methods: {
+      saveIP(){
+        if (this.namenodeIP !== "") this.isInitOpen = false;
+      },
       printDate(dateString) {
         dateString = dateString.toString() * 1000;
         const date = new Date(dateString);
@@ -187,11 +201,10 @@
       },
       async downloadFile() {
         const fileName = this.downloadfileName;
-        // await this.getDatanodeToDownload(fileName);
+        await this.getDatanodeToDownload(fileName);
         let i = 0;
 
-        // let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
-        let reqUrl = "http://" + "10.91.91.190:5000" + "/download";
+        let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
         let result = this.downloadRequest(fileName, reqUrl);
         console.log("result of download", result);
         i++;
@@ -201,7 +214,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/delete_file");
+          const url = "http://" + this.namenodeIP + "/delete_file";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -218,7 +232,8 @@
         this.fileInfo = {};
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/info");
+          const url = "http://" + this.namenodeIP + "/info";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -237,7 +252,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/copy");
+          const url = "http://" + this.namenodeIP + "/copy";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name-Old", fileName1);
           xhr.setRequestHeader("File-Name-New", fileName2);
           xhr.onreadystatechange = () => {
@@ -255,7 +271,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/move");
+          const url = "http://" + this.namenodeIP + "/move";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name-Old", fileName1);
           xhr.setRequestHeader("File-Name-New", fileName2);
           xhr.onreadystatechange = () => {
@@ -270,7 +287,8 @@
       init() {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/init");
+          const url = "http://" + this.namenodeIP + "/init";
+          xhr.open("GET", url);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
               console.log(xhr.response);
@@ -311,7 +329,8 @@
       getDatanodeToUpload(fileName) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/write");
+          const url = "http://" + this.namenodeIP + "/write";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -328,7 +347,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/create");
+          const url = "http://" + this.namenodeIP + "/create";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -342,7 +362,8 @@
       getDatanodeToDownload(fileName) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/read");
+          const url = "http://" + this.namenodeIP + "/read";
+          xhr.open("GET", url);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -360,7 +381,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/cd");
+          const url = "http://" + this.namenodeIP + "/cd";
+          xhr.open("GET", url);
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -385,7 +407,8 @@
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/ls");
+          const url = "http://" + this.namenodeIP + "/ls";
+          xhr.open("GET", url);
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -428,7 +451,8 @@
         const directory = this.mkDirectory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/mkdir");
+          const url = "http://" + this.namenodeIP + "/mkdir";
+          xhr.open("GET", url);
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -443,7 +467,8 @@
         const directory = this.delDirectory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/delete_dir");
+          const url = "http://" + this.namenodeIP + "/delete_dir";
+          xhr.open("GET", url);
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -487,4 +512,40 @@
 </script>
 
 <style scoped>
+  .modal {
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  /* Modal Content */
+  .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+  }
+
+  /* The Close Button */
+  .close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+  }
 </style>
