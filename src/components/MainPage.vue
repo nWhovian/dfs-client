@@ -27,6 +27,8 @@
       Download a file
       <input type="text" v-model="downloadfileName" placeholder="absolute name">
       <button v-on:click="downloadFile()">download file</button>
+      <br>
+      <a style="color:red;">{{downloadError}}</a>
     </div>
     <br>
     <div>
@@ -144,13 +146,15 @@
         mkDirectory: "",
         fileInfo: {},
         cdError: "",
+        downloadError:"",
+        downloadSuccess: "",
         lsList: [],
         delDirectory: "",
       }
     },
     created: {},
     methods: {
-      saveIP(){
+      saveIP() {
         if (this.namenodeIP !== "") this.isInitOpen = false;
       },
       printDate(dateString) {
@@ -202,12 +206,9 @@
       async downloadFile() {
         const fileName = this.downloadfileName;
         await this.getDatanodeToDownload(fileName);
-        let i = 0;
 
-        let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
-        let result = this.downloadRequest(fileName, reqUrl);
-        console.log("result of download", result);
-        i++;
+        let reqUrl = "http://" + this.datanodeIPsList[0] + "1" + "/download";
+        await this.downloadRequest(fileName, reqUrl, 0);
       },
       deleteFile() {
         const fileName = this.deleteFileName;
@@ -367,9 +368,12 @@
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.downloadError = "";
               this.datanodeIPsList = JSON.parse(xhr.response);
               console.log(this.datanodeIPsList);
               resolve();
+            } else {
+              this.downloadError = "sorry, no such file was found";
             }
           };
           xhr.onerror = reject;
@@ -479,33 +483,33 @@
           xhr.send(null);
         });
       },
-      downloadRequest(fileName, reqUrl) {
-        // return new Promise((resolve, reject) => {
-        const xhttp = new XMLHttpRequest();
-        xhttp.open("GET", reqUrl);
-        xhttp.setRequestHeader("File-Name", fileName);
-        xhttp.responseType = 'blob';
-        xhttp.onreadystatechange = function () {
-          let a;
-          if (xhttp.readyState === 4 && xhttp.status === 200) {
-            a = document.createElement('a');
-            let url = window.URL.createObjectURL(xhttp.response);
-            a.href = url;
-            a.download = fileName.split('/').pop();
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            return true;
-          } else {
-            return false;
-          }
-        };
-        // xhttp.onerror = reject;
-        xhttp.send(null);
-        return false;
-        // });
+      downloadRequest(fileName, reqUrl, i) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", reqUrl);
+          xhr.setRequestHeader("File-Name", fileName);
+          xhr.responseType = 'blob';
+          xhr.onreadystatechange = function () {
+            let a;
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              this.downloadError = "";
+              a = document.createElement('a');
+              let url = window.URL.createObjectURL(xhr.response);
+              a.href = url;
+              a.download = fileName.split('/').pop();
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+              resolve();
+            } else {
+              this.downloadError = "sorry, no such file was found";
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
       }
     }
   }
@@ -521,8 +525,8 @@
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
   }
 
   /* Modal Content */
