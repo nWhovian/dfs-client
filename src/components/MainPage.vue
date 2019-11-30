@@ -3,6 +3,12 @@
     <button v-on:click="init()">Init</button>
     <br>
     <div>
+      Create an empty file
+      <input type="text" v-model="createFileName" placeholder="absolute name">
+      <button v-on:click="createFile()">create file</button>
+    </div>
+    <br>
+    <div>
       Upload a file
       <br>
       <input type="file" ref="file" placeholder="upload a file">
@@ -33,6 +39,14 @@
       Get information about a file
       <input type="text" v-model="getInfoFileName" placeholder="absolute name">
       <button v-on:click="getFileInfo()">get info</button>
+      <br>
+      <div v-if="fileInfo !== undefined && fileInfo.size !== undefined">
+        <a>size of the file: <a style="color: red;">{{fileInfo.size}}</a></a>
+        <br>
+        <a>time of last access: <a style="color: red;">{{printDate(fileInfo.last_accessed)}}</a></a>
+        <br>
+        <a>time of last modification: <a style="color: red;">{{printDate(fileInfo.last_modified)}}</a></a>
+      </div>
     </div>
     <br>
     <div>
@@ -61,17 +75,23 @@
       Move to another directory ('cd' command)
       <input type="text" :placeholder="currentPath" v-model="cdDirectory">
       <button v-on:click="cdRequest()">move to directory</button>
+      <br>
+      <a style="color:red;">{{cdError}}</a>
     </div>
     <br>
     <div>
-      List all files and directories ('ls' command)
+      <a>Current directory: <a style="color: red;">{{currentPath}}</a></a>
       <br>
-      Current directory: {{currentPath}}
+      List all files and directories ('ls' command)
       <br>
       Look in another directory (optional):
       <input type="text" v-model="lsDirectory">
       <br>
       <button v-on:click="lsRequest()">list</button>
+      <br>
+      <a v-for="(entity, i) in lsList" :key="i" :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+        {{ entity.name }}
+      </a>
     </div>
     <br>
     <div>
@@ -94,28 +114,44 @@
     data() {
       return {
         chunkSize: 1 * 1024,
-        currentPath:"/",
+        currentPath: "/",
         directory: "",
         name: "",
         datanodeIP: "",
         fileStorage: {},
         downloadfileName: "",
         deleteFileName: "",
-        getInfoFileName:"",
-        copyFromFileName:"",
-        copyToFileName:"",
-        moveFromFileName:"",
-        moveToFileName:"",
+        getInfoFileName: "",
+        copyFromFileName: "",
+        copyToFileName: "",
+        moveFromFileName: "",
+        moveToFileName: "",
+        createFileName: "",
         datanodeIPsList: {},
         lsDirectory: "",
         cdDirectory: "",
-        mkDirectory:"",
-        lsList: {},
+        mkDirectory: "",
+        fileInfo: {},
+        cdError: "",
+        lsList: [],
         delDirectory: "",
       }
     },
     created: {},
     methods: {
+      printDate(dateString) {
+        dateString = dateString.toString() * 1000;
+        const date = new Date(dateString);
+        let options = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric'
+        };
+        return date.toLocaleDateString("en-US", options);
+      },
       async uploadFile() {
         const file = this.$refs.file.files[0];
         const fileName = this.directory + "/" + this.name + "." + file.name.split('.').pop();
@@ -151,11 +187,11 @@
       },
       async downloadFile() {
         const fileName = this.downloadfileName;
-        await this.getDatanodeToDownload(fileName);
+        // await this.getDatanodeToDownload(fileName);
         let i = 0;
 
+        // let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
         let reqUrl = "http://" + "10.91.91.190:5000" + "/download";
-        console.log(reqUrl);
         let result = this.downloadRequest(fileName, reqUrl);
         console.log("result of download", result);
         i++;
@@ -179,14 +215,15 @@
       },
       getFileInfo() {
         const fileName = this.getInfoFileName;
-
+        this.fileInfo = {};
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("GET", "http://10.91.86.17:5000/info");
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-              console.log(xhr.response);
+              this.fileInfo = JSON.parse(xhr.response);
+              console.log(this.fileInfo);
               resolve();
             }
           };
@@ -274,12 +311,27 @@
       getDatanodeToUpload(fileName) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("GET", "http://10.91.86.17:5000/create");
+          xhr.open("GET", "http://10.91.86.17:5000/write");
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
               this.datanodeIP = xhr.response;
-              console.log(this.datanodeIP);
+              resolve();
+            }
+          };
+          xhr.onerror = reject;
+          xhr.send(null);
+        });
+      },
+      createFile() {
+        const fileName = this.createFileName;
+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "http://10.91.86.17:5000/create");
+          xhr.setRequestHeader("File-Name", fileName);
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
               resolve();
             }
           };
@@ -294,7 +346,7 @@
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-              this.datanodeIPsList = xhr.response;
+              this.datanodeIPsList = JSON.parse(xhr.response);
               console.log(this.datanodeIPsList);
               resolve();
             }
@@ -312,11 +364,12 @@
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.cdError = "";
               this.currentPath = directory;
               console.log("moved");
               resolve();
-            } else if (xhr.status === 400) {
-              console.log("no such directory");
+            } else if (xhr.readyState === 4 && xhr.status === 400) {
+              this.cdError = "no such directory";
               resolve();
             }
           };
@@ -328,6 +381,7 @@
         let directory;
         if (this.lsDirectory === "") directory = this.currentPath;
         else directory = this.lsDirectory;
+        this.lsList = []
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -335,8 +389,34 @@
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-              this.lsList = xhr.response;
-              console.log(this.lsList);
+              let lsResponse = xhr.response;
+              console.log(lsResponse);
+              let list = lsResponse.toString().replace("{", "").replace("}", "").split(",");
+              for (let value of list) {
+                let tuple = value.replace(" ", "").replace("\"", "").replace("\'", "").split(":");
+                let name = tuple[0].replace(" ", "").replace("\"", "").replace("\'", "");
+                let color = tuple[1].replace(" ", "").replace("\"", "").replace("\'", "");
+                tuple = {};
+                tuple.name = name;
+                tuple.color = color;
+                this.lsList.push(tuple)
+              }
+              console.log(this.lsList[0]);
+              this.lsList.sort(function (a, b) {
+                let nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
+                if (nameA < nameB)
+                  return -1;
+                if (nameA > nameB)
+                  return 1;
+                return 0
+              });
+              console.log(this.lsList[0]);
+              resolve();
+            } else if (xhr.readyState === 4 && xhr.status === 400) {
+              let tuple = {};
+              tuple.name = "no such directory";
+              tuple.color = 'true';
+              this.lsList.push(tuple);
               resolve();
             }
           };
@@ -344,7 +424,7 @@
           xhr.send(null);
         });
       },
-      mkdirRequest(){
+      mkdirRequest() {
         const directory = this.mkDirectory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -359,7 +439,7 @@
           xhr.send(null);
         });
       },
-      delDirRequest(){
+      delDirRequest() {
         const directory = this.delDirectory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -375,29 +455,32 @@
         });
       },
       downloadRequest(fileName, reqUrl) {
-        return new Promise((resolve, reject) => {
-          const xhttp = new XMLHttpRequest();
-          xhttp.open("GET", reqUrl);
-          xhttp.setRequestHeader("File-Name", fileName);
-          xhttp.responseType = 'blob';
-          xhttp.onreadystatechange = function () {
-            let a;
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-              a = document.createElement('a');
-              let url = window.URL.createObjectURL(xhttp.response);
-              a.href = url;
-              a.download = fileName.split('/').pop();
-              a.style.display = 'none';
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              window.URL.revokeObjectURL(url);
-              resolve();
-            }
-          };
-          xhttp.onerror = reject;
-          xhttp.send(null);
-        });
+        // return new Promise((resolve, reject) => {
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("GET", reqUrl);
+        xhttp.setRequestHeader("File-Name", fileName);
+        xhttp.responseType = 'blob';
+        xhttp.onreadystatechange = function () {
+          let a;
+          if (xhttp.readyState === 4 && xhttp.status === 200) {
+            a = document.createElement('a');
+            let url = window.URL.createObjectURL(xhttp.response);
+            a.href = url;
+            a.download = fileName.split('/').pop();
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            return true;
+          } else {
+            return false;
+          }
+        };
+        // xhttp.onerror = reject;
+        xhttp.send(null);
+        return false;
+        // });
       }
     }
   }
