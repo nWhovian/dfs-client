@@ -139,13 +139,13 @@
       </div>
     </div>
 
-    <!--    <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">-->
-    <!--      <div class="modal-content">-->
-    <!--        <p>Please enter the namenode IP</p>-->
-    <!--        <input type="text" v-model="namenodeIP">-->
-    <!--        <button v-on:click="saveIP()">save</button>-->
-    <!--      </div>-->
-    <!--    </div>-->
+        <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">
+          <div class="modal-content">
+            <p>Please enter the namenode IP</p>
+            <input type="text" v-model="namenodeIP">
+            <button v-on:click="saveIP()">save</button>
+          </div>
+        </div>
 
     <div id="initConfirmation" class="modal" v-if="initConfirmationOpen">
       <div class="modal-content">
@@ -189,7 +189,7 @@
     data() {
       return {
         isInitOpen: true,
-        namenodeIP: "3.14.7.64:80",
+        namenodeIP: "",
         chunkSize: 1 * 1024 * 1024,
         currentPath: "/",
         directory: "",
