@@ -1,120 +1,170 @@
 <template>
   <div>
-    <button v-on:click="init()">Init</button>
-    <br>
-    <div>
-      Create an empty file
-      <input type="text" v-model="createFileName" placeholder="absolute name">
-      <button v-on:click="createFile()">create file</button>
+    <div class="init">
+      <p>Initialize the storage</p>
+      <button v-on:click="openInitConfirmation()">initialize</button>
     </div>
-    <br>
-    <div>
-      Upload a file
-      <br>
-      <input type="file" ref="file" placeholder="upload a file">
-      <br>
-      <label>
-        Path to the file:
-        <input type="text" v-model="directory" placeholder="/directory1/directory2">
-        File name:
-        <input type="text" v-model="name" placeholder="file">
-      </label>
-      <br>
-      <button v-on:click="uploadFile()">upload file</button>
-    </div>
-    <br>
-    <div>
-      Download a file
-      <input type="text" v-model="downloadfileName" placeholder="absolute name">
-      <button v-on:click="downloadFile()">download file</button>
-      <br>
-      <a style="color:red;">{{downloadError}}</a>
-    </div>
-    <br>
-    <div>
-      Delete a file
-      <input type="text" v-model="deleteFileName" placeholder="absolute name">
-      <button v-on:click="deleteFile()">delete file</button>
-    </div>
-    <br>
-    <div>
-      Get information about a file
-      <input type="text" v-model="getInfoFileName" placeholder="absolute name">
-      <button v-on:click="getFileInfo()">get info</button>
-      <br>
-      <div v-if="fileInfo !== undefined && fileInfo.size !== undefined">
-        <a>size of the file: <a style="color: red;">{{fileInfo.size}}</a></a>
-        <br>
-        <a>time of last access: <a style="color: red;">{{printDate(fileInfo.last_accessed)}}</a></a>
-        <br>
-        <a>time of last modification: <a style="color: red;">{{printDate(fileInfo.last_modified)}}</a></a>
+    <div class="card-container">
+      <div class="card card-file">
+        <div class="file-commands">
+          <div>
+            <div>
+              <p class="title">Create an empty file</p>
+              <input type="text" v-model="createFileName" placeholder="absolute name">
+              <p>
+                <button v-on:click="createFile()">create file</button>
+              </p>
+            </div>
+            <div>
+              <p class="title">Download a file</p>
+              <input type="text" v-model="downloadfileName" placeholder="absolute name">
+              <p>
+                <button v-on:click="downloadFile()">download file</button>
+              </p>
+
+              <a style="color:red;">{{downloadError}}</a>
+            </div>
+            <div>
+              <p class="title">Upload a file</p>
+              <p>
+                <input type="file" ref="file" placeholder="upload a file">
+              </p>
+              <p>
+                save to directory:
+                <input type="text" v-model="directory" placeholder="/directory1/directory2">
+              </p>
+              <p>
+                save as:
+                <input type="text" v-model="name" placeholder="file name">
+              </p>
+              <p>
+                <button v-on:click="uploadFile()">upload file</button>
+              </p>
+            </div>
+          </div>
+          <div>
+            <div>
+              <p class="title">Delete a file</p>
+              <input type="text" v-model="deleteFileName" placeholder="absolute name">
+              <p>
+                <button v-on:click="deleteFile()">delete file</button>
+              </p>
+            </div>
+            <div>
+              <p class="title">Get information about a file</p>
+              <input type="text" v-model="getInfoFileName" placeholder="absolute name">
+              <p>
+                <button v-on:click="getFileInfo()">file info</button>
+              </p>
+              <div v-if="fileInfo !== undefined && fileInfo.size !== undefined">
+                <p>size of the file: <a style="color: red;">{{fileInfo.size}}</a></p>
+                <p>time of last access: <a style="color: red;">{{printDate(fileInfo.last_accessed)}}</a></p>
+                <p>time of last modification: <a style="color: red;">{{printDate(fileInfo.last_modified)}}</a></p>
+              </div>
+            </div>
+            <div>
+              <p class="title">Copy a file</p>
+              <p>file: <input type="text" v-model="copyFromFileName" placeholder="absolute name"></p>
+              <p>as:
+                <input type="text" v-model="copyToFileName" placeholder="absolute name">
+              </p>
+              <p>
+                <button v-on:click="copyFile()">copy file</button>
+              </p>
+            </div>
+            <div>
+              <p class="title">Move a file</p>
+              <p>from:
+                <input type="text" v-model="moveFromFileName" placeholder="absolute name">
+              </p>
+              <p>to:
+                <input type="text" v-model="moveToFileName" placeholder="absolute name">
+              </p>
+              <p>
+                <button v-on:click="moveFile()">move file</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-dir">
+        <div><p class="title">Current directory: <a style="color: red;">{{currentPath}}</a></p></div>
+        <div>
+          <p class="title">Move to another directory ('cd' command)</p>
+          <p><input type="text" :placeholder="currentPath" v-model="cdDirectory"></p>
+          <p>
+            <button v-on:click="cdRequest()">move to directory</button>
+          </p>
+          <p style="color:red;">{{cdError}}</p>
+        </div>
+        <div>
+          <p class="title">List all files and directories ('ls' command)</p>
+          <p>directory (optional):
+            <input type="text" v-model="lsDirectory"></p>
+          <p>
+            <button v-on:click="getLs()">list</button>
+          </p>
+          <a v-for="(entity, i) in lsList" :key="i" :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+            {{ entity.name }}
+          </a>
+        </div>
+        <div>
+          <p class="title">Make a directory</p>
+          <input type="text" placeholder="absolute name of a directory" v-model="mkDirectory">
+          <p>
+            <button v-on:click="mkdirRequest()">make directory</button>
+          </p>
+        </div>
+        <div>
+          <p class="title">Delete a directory</p>
+          <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
+          <p>
+            <button v-on:click="openDeleteConfirmation()">delete directory</button>
+          </p>
+        </div>
       </div>
     </div>
-    <br>
-    <div>
-      Copy a file
-      <input type="text" v-model="copyFromFileName" placeholder="absolute name">
-      <br>
-      as:
-      <input type="text" v-model="copyToFileName" placeholder="absolute name">
-      <br>
-      <button v-on:click="copyFile()">copy file</button>
-    </div>
-    <br>
-    <div>
-      Move a file
-      from:
-      <input type="text" v-model="moveFromFileName" placeholder="absolute name">
-      <br>
-      to:
-      <input type="text" v-model="moveToFileName" placeholder="absolute name">
-      <br>
-      <button v-on:click="moveFile()">move file</button>
-    </div>
-    <br>
-    <br>
-    <div>
-      Move to another directory ('cd' command)
-      <input type="text" :placeholder="currentPath" v-model="cdDirectory">
-      <button v-on:click="cdRequest()">move to directory</button>
-      <br>
-      <a style="color:red;">{{cdError}}</a>
-    </div>
-    <br>
-    <div>
-      <a>Current directory: <a style="color: red;">{{currentPath}}</a></a>
-      <br>
-      List all files and directories ('ls' command)
-      <br>
-      Look in another directory (optional):
-      <input type="text" v-model="lsDirectory">
-      <br>
-      <button v-on:click="lsRequest()">list</button>
-      <br>
-      <a v-for="(entity, i) in lsList" :key="i" :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
-        {{ entity.name }}
-      </a>
-    </div>
-    <br>
-    <div>
-      Make a directory
-      <input type="text" placeholder="absolute name of a directory" v-model="mkDirectory">
-      <button v-on:click="mkdirRequest()">make directory</button>
-    </div>
-    <br>
-    <div>
-      Delete a directory
-      <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
-      <button v-on:click="delDirRequest()">delete directory</button>
-    </div>
 
-    <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">
+    <!--    <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">-->
+    <!--      <div class="modal-content">-->
+    <!--        <p>Please enter the namenode IP</p>-->
+    <!--        <input type="text" v-model="namenodeIP">-->
+    <!--        <button v-on:click="saveIP()">save</button>-->
+    <!--      </div>-->
+    <!--    </div>-->
+
+    <div id="initConfirmation" class="modal" v-if="initConfirmationOpen">
       <div class="modal-content">
-        <p>Please enter the namenode IP</p>
-        <input type="text" v-model="namenodeIP">
-        <button v-on:click="saveIP()">save</button>
+        <p>The root directory contains:</p>
+        <a v-for="(entity, i) in initConfirmList" :key="i"
+           :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+          {{ entity.name }}
+        </a>
+        <p>Are you sure you want to clean the storage?</p>
+        <button v-on:click="closeInitConfirmation()">back</button>
+        <button v-on:click="init()">ok</button>
       </div>
+    </div>
 
+    <div id="availableAmount" class="modal" v-if="availableShow">
+      <div class="modal-content">
+        <p>Available storage capacity:</p>
+        <p style="color: red;">{{availableAmount}} bytes</p>
+        <button v-on:click="closeAvailable()">ok</button>
+      </div>
+    </div>
+
+    <div id="deleteConfirmation" class="modal" v-if="deleteConfirmationOpen">
+      <div class="modal-content">
+        <p>The directory <a style="color: red;">{{delDirectory}}</a> contains:</p>
+        <a v-for="(entity, i) in deleteConfirmList" :key="i"
+           :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+          {{ entity.name }}
+        </a>
+        <p>Are you sure you want to delete the directory?</p>
+        <button v-on:click="closeDeleteConfirmation()">back</button>
+        <button v-on:click="deleteDirectory()">ok</button>
+      </div>
     </div>
   </div>
 </template>
@@ -125,7 +175,7 @@
     data() {
       return {
         isInitOpen: true,
-        namenodeIP: "",
+        namenodeIP: "3.14.7.64:80",
         chunkSize: 1 * 1024,
         currentPath: "/",
         directory: "",
@@ -146,14 +196,45 @@
         mkDirectory: "",
         fileInfo: {},
         cdError: "",
-        downloadError:"",
+        downloadError: "",
         downloadSuccess: "",
         lsList: [],
         delDirectory: "",
+        initConfirmList: [],
+        initConfirmationOpen: false,
+        availableAmount: "",
+        availableShow: false,
+        deleteConfirmationOpen: false,
+        deleteConfirmList: [],
       }
     },
     created: {},
     methods: {
+      closeDeleteConfirmation() {
+        this.deleteConfirmationOpen = false;
+      },
+      async openDeleteConfirmation() {
+        this.deleteConfirmList = [];
+        await this.lsRequest(this.delDirectory);
+        this.deleteConfirmList = this.lsResponse;
+        console.log(this.deleteConfirmList);
+        if (this.deleteConfirmList.length === 0) this.deleteDirectory();
+        else this.deleteConfirmationOpen = true;
+      },
+      closeAvailable() {
+        this.availableShow = false;
+      },
+      async openInitConfirmation() {
+        this.initConfirmList = [];
+        await this.lsRequest("/");
+        this.initConfirmList = this.lsResponse;
+        console.log(this.initConfirmList);
+        if (this.initConfirmList.length === 0) this.init();
+        else this.initConfirmationOpen = true;
+      },
+      closeInitConfirmation() {
+        this.initConfirmationOpen = false;
+      },
       saveIP() {
         if (this.namenodeIP !== "") this.isInitOpen = false;
       },
@@ -286,13 +367,15 @@
         });
       },
       init() {
+        this.initConfirmationOpen = false;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/init";
           xhr.open("GET", url);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-              console.log(xhr.response);
+              this.availableAmount = xhr.response;
+              this.availableShow = true;
               resolve();
             }
           };
@@ -403,12 +486,16 @@
           xhr.send(null);
         });
       },
-      lsRequest() {
+      async getLs() {
         let directory;
         if (this.lsDirectory === "") directory = this.currentPath;
         else directory = this.lsDirectory;
-        this.lsList = []
-
+        this.lsList = [];
+        await this.lsRequest(directory);
+        this.lsList = this.lsResponse;
+      },
+      lsRequest(directory) {
+        this.lsResponse = [];
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/ls";
@@ -418,32 +505,33 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
               let lsResponse = xhr.response;
               console.log(lsResponse);
-              let list = lsResponse.toString().replace("{", "").replace("}", "").split(",");
-              for (let value of list) {
-                let tuple = value.replace(" ", "").replace("\"", "").replace("\'", "").split(":");
-                let name = tuple[0].replace(" ", "").replace("\"", "").replace("\'", "");
-                let color = tuple[1].replace(" ", "").replace("\"", "").replace("\'", "");
-                tuple = {};
-                tuple.name = name;
-                tuple.color = color;
-                this.lsList.push(tuple)
+              if (lsResponse === "{}") resolve();
+              else {
+                let list = lsResponse.toString().replace("{", "").replace("}", "").split(",");
+                for (let value of list) {
+                  let tuple = value.replace(" ", "").replace("\"", "").replace("\'", "").split(":");
+                  let name = tuple[0].replace(" ", "").replace("\"", "").replace("\'", "");
+                  let color = tuple[1].replace(" ", "").replace("\"", "").replace("\'", "");
+                  tuple = {};
+                  tuple.name = name;
+                  tuple.color = color;
+                  this.lsResponse.push(tuple)
+                }
+                this.lsResponse.sort(function (a, b) {
+                  let nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
+                  if (nameA < nameB)
+                    return -1;
+                  if (nameA > nameB)
+                    return 1;
+                  return 0
+                });
+                resolve();
               }
-              console.log(this.lsList[0]);
-              this.lsList.sort(function (a, b) {
-                let nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
-                if (nameA < nameB)
-                  return -1;
-                if (nameA > nameB)
-                  return 1;
-                return 0
-              });
-              console.log(this.lsList[0]);
-              resolve();
             } else if (xhr.readyState === 4 && xhr.status === 400) {
               let tuple = {};
               tuple.name = "no such directory";
               tuple.color = 'true';
-              this.lsList.push(tuple);
+              this.lsResponse.push(tuple);
               resolve();
             }
           };
@@ -467,8 +555,9 @@
           xhr.send(null);
         });
       },
-      delDirRequest() {
+      deleteDirectory() {
         const directory = this.delDirectory;
+        this.deleteConfirmationOpen = false;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/delete_dir";
@@ -516,6 +605,50 @@
 </script>
 
 <style scoped>
+
+  .init {
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .card-container {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .card {
+    width: 600px;
+    display: flex;
+    flex-flow: column;
+    align-items: baseline;
+  }
+
+  /*.card-file {*/
+  /*  background-color: rgba(153, 44, 227, 0.1);*/
+  /*}*/
+
+  .file-commands {
+    display: flex;
+    flex-flow: initial;
+    align-items: center;
+    justify-content: space-between;
+    width: inherit;
+    /*margin:20px;*/
+  }
+
+  p {
+    text-align: left;
+    margin: 7px 0 7px;
+    font-size: 18px;
+  }
+
+  p.title {
+    font-weight: bolder;
+  }
+
   .modal {
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
