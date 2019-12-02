@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="init">
-      <p>Initialize the storage</p>
+      <p class="title">Initialize the storage</p>
       <button v-on:click="openInitConfirmation()">initialize</button>
     </div>
     <div class="card-container">
@@ -21,16 +21,15 @@
               <p>
                 <button v-on:click="downloadFile()">download file</button>
               </p>
-
-              <a style="color:red;">{{downloadError}}</a>
+              <p style="color:#ff3a50;">{{downloadError}}</p>
             </div>
             <div>
               <p class="title">Upload a file</p>
               <p>
-                <input type="file" ref="file" placeholder="upload a file">
+                <input type="file" ref="file" placeholder="upload a file" style="border: none;">
               </p>
               <p>
-                save to directory:
+                save to:
                 <input type="text" v-model="directory" placeholder="/directory1/directory2">
               </p>
               <p>
@@ -39,6 +38,7 @@
               </p>
               <p>
                 <button v-on:click="uploadFile()">upload file</button>
+                <a style="color:#ff3a50;">{{uploadError}}</a>
               </p>
             </div>
           </div>
@@ -49,6 +49,7 @@
               <p>
                 <button v-on:click="deleteFile()">delete file</button>
               </p>
+              <p style="color:#ff3a50;">{{deleteError}}</p>
             </div>
             <div>
               <p class="title">Get information about a file</p>
@@ -56,10 +57,11 @@
               <p>
                 <button v-on:click="getFileInfo()">file info</button>
               </p>
+              <p style="color:#ff3a50;">{{infoError}}</p>
               <div v-if="fileInfo !== undefined && fileInfo.size !== undefined">
-                <p>size of the file: <a style="color: red;">{{fileInfo.size}}</a></p>
-                <p>time of last access: <a style="color: red;">{{printDate(fileInfo.last_accessed)}}</a></p>
-                <p>time of last modification: <a style="color: red;">{{printDate(fileInfo.last_modified)}}</a></p>
+                <p>size of the file: <a style="color: #ff3a50;">{{fileInfo.size}}</a></p>
+                <p>time of last access: <a style="color: #ff3a50;">{{printDate(fileInfo.last_accessed)}}</a></p>
+                <p>time of last modification: <a style="color: #ff3a50;">{{printDate(fileInfo.last_modified)}}</a></p>
               </div>
             </div>
             <div>
@@ -70,6 +72,7 @@
               </p>
               <p>
                 <button v-on:click="copyFile()">copy file</button>
+                <a style="color:#ff3a50;">{{copyError}}</a>
               </p>
             </div>
             <div>
@@ -82,20 +85,21 @@
               </p>
               <p>
                 <button v-on:click="moveFile()">move file</button>
+                <a style="color:#ff3a50;">{{moveError}}</a>
               </p>
             </div>
           </div>
         </div>
       </div>
       <div class="card card-dir">
-        <div><p class="title">Current directory: <a style="color: red;">{{currentPath}}</a></p></div>
+        <p class="title">Current directory: <a style="color: #ff3a50;">{{currentPath}}</a></p>
         <div>
           <p class="title">Move to another directory ('cd' command)</p>
           <p><input type="text" :placeholder="currentPath" v-model="cdDirectory"></p>
           <p>
             <button v-on:click="cdRequest()">move to directory</button>
+            <a style="color:#ff3a50;">{{cdError}}</a>
           </p>
-          <p style="color:red;">{{cdError}}</p>
         </div>
         <div>
           <p class="title">List all files and directories ('ls' command)</p>
@@ -104,22 +108,24 @@
           <p>
             <button v-on:click="getLs()">list</button>
           </p>
-          <a v-for="(entity, i) in lsList" :key="i" :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+          <a v-for="(entity, i) in lsList" :key="i" :style="(entity.color === 'true' ? 'color: #ff3a50;' : 'color: #0864b0;') + 'font-weight:bolder; font-size:18px;'">
             {{ entity.name }}
           </a>
         </div>
         <div>
           <p class="title">Make a directory</p>
-          <input type="text" placeholder="absolute name of a directory" v-model="mkDirectory">
+          <input type="text" placeholder="absolute name" v-model="mkDirectory">
           <p>
             <button v-on:click="mkdirRequest()">make directory</button>
+            <a style="color:#ff3a50;">{{mkError}}</a>
           </p>
         </div>
         <div>
           <p class="title">Delete a directory</p>
-          <input type="text" placeholder="absolute name of a directory" v-model="delDirectory">
+          <input type="text" placeholder="absolute name" v-model="delDirectory">
           <p>
             <button v-on:click="openDeleteConfirmation()">delete directory</button>
+            <a style="color:#ff3a50;">{{delError}}</a>
           </p>
         </div>
       </div>
@@ -137,7 +143,7 @@
       <div class="modal-content">
         <p>The root directory contains:</p>
         <a v-for="(entity, i) in initConfirmList" :key="i"
-           :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+           :style="(entity.color === 'true' ? 'color: #ff3a50;' : 'color: #0864b0;') + 'font-weight:bolder; font-size:18px;'">
           {{ entity.name }}
         </a>
         <p>Are you sure you want to clean the storage?</p>
@@ -149,16 +155,16 @@
     <div id="availableAmount" class="modal" v-if="availableShow">
       <div class="modal-content">
         <p>Available storage capacity:</p>
-        <p style="color: red;">{{availableAmount}} bytes</p>
+        <p style="color: #ff3a50;">{{availableAmount}} bytes</p>
         <button v-on:click="closeAvailable()">ok</button>
       </div>
     </div>
 
     <div id="deleteConfirmation" class="modal" v-if="deleteConfirmationOpen">
       <div class="modal-content">
-        <p>The directory <a style="color: red;">{{delDirectory}}</a> contains:</p>
+        <p>The directory <a style="color: #ff3a50;">{{delDirectory}}</a> contains:</p>
         <a v-for="(entity, i) in deleteConfirmList" :key="i"
-           :style="entity.color === 'true' ? 'color: red;' : 'color: blue;'">
+           :style="(entity.color === 'true' ? 'color: #ff3a50;' : 'color: #0864b0;') + 'font-weight:bolder; font-size:18px;'">
           {{ entity.name }}
         </a>
         <p>Are you sure you want to delete the directory?</p>
@@ -176,7 +182,7 @@
       return {
         isInitOpen: true,
         namenodeIP: "3.14.7.64:80",
-        chunkSize: 1 * 1024,
+        chunkSize: 1 * 1024 * 1024,
         currentPath: "/",
         directory: "",
         name: "",
@@ -196,6 +202,7 @@
         mkDirectory: "",
         fileInfo: {},
         cdError: "",
+        lsError: "",
         downloadError: "",
         downloadSuccess: "",
         lsList: [],
@@ -206,6 +213,14 @@
         availableShow: false,
         deleteConfirmationOpen: false,
         deleteConfirmList: [],
+        delError: "",
+        moveError: "",
+        copyError: "",
+        infoError: "",
+        deleteError: "",
+        mkError:"",
+        uploadError:"",
+        datanodeAnswered: false,
       }
     },
     created: {},
@@ -231,6 +246,7 @@
         console.log(this.initConfirmList);
         if (this.initConfirmList.length === 0) this.init();
         else this.initConfirmationOpen = true;
+        console.log(this.initConfirmationOpen)
       },
       closeInitConfirmation() {
         this.initConfirmationOpen = false;
@@ -253,7 +269,8 @@
       },
       async uploadFile() {
         const file = this.$refs.file.files[0];
-        const fileName = this.directory + "/" + this.name + "." + file.name.split('.').pop();
+        let fileName = this.directory + "/" + this.name + "." + file.name.split('.').pop();
+        if (fileName[0] !== "/") fileName = "/" + fileName;
         // this.datanodeIP = "10.91.91.190:5000";
 
         await this.getDatanodeToUpload(fileName);
@@ -285,15 +302,27 @@
         console.log("The file uploaded");
       },
       async downloadFile() {
-        const fileName = this.downloadfileName;
+        let fileName = this.downloadfileName;
+        if (fileName[0] !== "/") fileName = "/" + fileName;
         await this.getDatanodeToDownload(fileName);
+        this.datanodeAnswered = false;
+        let i = 0;
 
-        let reqUrl = "http://" + this.datanodeIPsList[0] + "1" + "/download";
-        await this.downloadRequest(fileName, reqUrl, 0);
+        while((!this.datanodeAnswered) && (i < this.datanodeIPsList.length)){
+          let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
+          await this.downloadRequest(fileName, reqUrl);
+          i++;
+        }
+
+        if (!this.datanodeAnswered) {
+          this.downloadError = "sorry, no such file was found";
+        } else {
+          this.downloadError = "";
+        }
       },
       deleteFile() {
-        const fileName = this.deleteFileName;
-
+        let fileName = this.deleteFileName;
+        if (fileName[0] !== "/") fileName = "/" + fileName;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/delete_file";
@@ -301,8 +330,10 @@
           xhr.setRequestHeader("File-Name", fileName);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-              console.log("deleted!");
+              this.deleteError = "";
               resolve();
+            } else {
+              this.deleteError = "sorry, no such file was found"
             }
           };
           xhr.onerror = reject;
@@ -310,7 +341,8 @@
         });
       },
       getFileInfo() {
-        const fileName = this.getInfoFileName;
+        let fileName = this.getInfoFileName;
+        if (fileName[0] !== "/") fileName = "/" + fileName;
         this.fileInfo = {};
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -320,8 +352,10 @@
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
               this.fileInfo = JSON.parse(xhr.response);
-              console.log(this.fileInfo);
+              this.infoError = "";
               resolve();
+            } else {
+              this.infoError = "sorry, no such file was found"
             }
           };
           xhr.onerror = reject;
@@ -329,8 +363,10 @@
         });
       },
       copyFile() {
-        const fileName1 = this.copyFromFileName;
-        const fileName2 = this.copyToFileName;
+        let fileName1 = this.copyFromFileName;
+        let fileName2 = this.copyToFileName;
+        if (fileName1[0] !== "/") fileName1 = "/" + fileName1;
+        if (fileName2[0] !== "/") fileName2 = "/" + fileName2;
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -340,7 +376,10 @@
           xhr.setRequestHeader("File-Name-New", fileName2);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.copyError = "";
               resolve();
+            } else {
+              this.copyError = "incorrect request"
             }
           };
           xhr.onerror = reject;
@@ -348,8 +387,10 @@
         });
       },
       moveFile() {
-        const fileName1 = this.moveFromFileName;
-        const fileName2 = this.moveToFileName;
+        let fileName1 = this.moveFromFileName;
+        let fileName2 = this.moveToFileName;
+        if (fileName1[0] !== "/") fileName1 = "/" + fileName1;
+        if (fileName2[0] !== "/") fileName2 = "/" + fileName2;
 
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -359,7 +400,10 @@
           xhr.setRequestHeader("File-Name-New", fileName2);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.moveError = "";
               resolve();
+            } else {
+              this.moveError = "incorrect request"
             }
           };
           xhr.onerror = reject;
@@ -419,7 +463,10 @@
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
               this.datanodeIP = xhr.response;
+              this.uploadError = "";
               resolve();
+            } else {
+              this.uploadError = "incorrect request"
             }
           };
           xhr.onerror = reject;
@@ -427,21 +474,23 @@
         });
       },
       createFile() {
-        const fileName = this.createFileName;
-
-        return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          const url = "http://" + this.namenodeIP + "/create";
-          xhr.open("GET", url);
-          xhr.setRequestHeader("File-Name", fileName);
-          xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-              resolve();
-            }
-          };
-          xhr.onerror = reject;
-          xhr.send(null);
-        });
+        let fileName = this.createFileName;
+        if (fileName[0] !== "/") fileName = "/" + fileName;
+        if (fileName.length !== 1) {
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const url = "http://" + this.namenodeIP + "/create";
+            xhr.open("GET", url);
+            xhr.setRequestHeader("File-Name", fileName);
+            xhr.onreadystatechange = () => {
+              if (xhr.readyState === 4 && xhr.status === 200) {
+                resolve();
+              }
+            };
+            xhr.onerror = reject;
+            xhr.send(null);
+          });
+        }
       },
       getDatanodeToDownload(fileName) {
         return new Promise((resolve, reject) => {
@@ -464,8 +513,8 @@
         });
       },
       cdRequest() {
-        const directory = this.cdDirectory;
-
+        let directory = this.cdDirectory;
+        if (directory[0] !== '/') directory = "/" + directory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/cd";
@@ -490,11 +539,13 @@
         let directory;
         if (this.lsDirectory === "") directory = this.currentPath;
         else directory = this.lsDirectory;
+        if (directory[0] !== "/") directory = "/" + directory;
         this.lsList = [];
         await this.lsRequest(directory);
         this.lsList = this.lsResponse;
       },
       lsRequest(directory) {
+        if (directory[0] !== '/') directory = "/" + directory;
         this.lsResponse = [];
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -503,6 +554,7 @@
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.lsError = "";
               let lsResponse = xhr.response;
               console.log(lsResponse);
               if (lsResponse === "{}") resolve();
@@ -527,10 +579,10 @@
                 });
                 resolve();
               }
-            } else if (xhr.readyState === 4 && xhr.status === 400) {
+            } else if (xhr.readyState === 4){
               let tuple = {};
               tuple.name = "no such directory";
-              tuple.color = 'true';
+              tuple.color = "true";
               this.lsResponse.push(tuple);
               resolve();
             }
@@ -540,7 +592,8 @@
         });
       },
       mkdirRequest() {
-        const directory = this.mkDirectory;
+        let directory = this.mkDirectory;
+        if (directory[0] !== '/') directory = "/" + directory;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           const url = "http://" + this.namenodeIP + "/mkdir";
@@ -548,7 +601,10 @@
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.mkError = "";
               resolve();
+            } else {
+              this.mkError = "incorrect request";
             }
           };
           xhr.onerror = reject;
@@ -556,7 +612,8 @@
         });
       },
       deleteDirectory() {
-        const directory = this.delDirectory;
+        let directory = this.delDirectory;
+        if (directory[0] !== '/') directory = "/" + directory;
         this.deleteConfirmationOpen = false;
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -565,23 +622,26 @@
           xhr.setRequestHeader("Directory", directory);
           xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 200) {
+              this.delError = "";
               resolve();
+            } else {
+              this.delError = "no such directory";
             }
           };
           xhr.onerror = reject;
           xhr.send(null);
         });
       },
-      downloadRequest(fileName, reqUrl, i) {
+      downloadRequest(fileName, reqUrl) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("GET", reqUrl);
           xhr.setRequestHeader("File-Name", fileName);
           xhr.responseType = 'blob';
-          xhr.onreadystatechange = function () {
+          xhr.onreadystatechange = () => {
             let a;
             if (xhr.readyState === 4 && xhr.status === 200) {
-              this.downloadError = "";
+              this.datanodeAnswered = true;
               a = document.createElement('a');
               let url = window.URL.createObjectURL(xhr.response);
               a.href = url;
@@ -593,10 +653,13 @@
               window.URL.revokeObjectURL(url);
               resolve();
             } else {
-              this.downloadError = "sorry, no such file was found";
+              this.datanodeAnswered = false;
             }
           };
-          xhr.onerror = reject;
+          xhr.onerror = () => {
+            this.datanodeAnswered = false;
+            resolve();
+          };
           xhr.send(null);
         });
       }
@@ -639,6 +702,10 @@
     /*margin:20px;*/
   }
 
+  .file-commands > div > div, .card-dir > div {
+    margin-bottom: 20px;
+  }
+
   p {
     text-align: left;
     margin: 7px 0 7px;
@@ -647,6 +714,32 @@
 
   p.title {
     font-weight: bolder;
+  }
+
+  button {
+    background-color: white;
+    color: black;
+    border: 2px solid 	#089edd;
+    padding: 6px 15px;
+    font-size: 16px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+  }
+
+  button:hover {
+    background-color: #089edd; /* Green */
+    color: white;
+  }
+
+  input {
+    border: none;
+    border-bottom: 2px solid #089edd;
+    padding: 4px;
+    font-size: 16px;
+  }
+
+  input[type=text]:focus {
+    outline: none !important;
   }
 
   .modal {
@@ -668,7 +761,12 @@
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 80%;
+    width: 30%;
+    text-align: center;
+  }
+
+  .modal-content p {
+    text-align: center;
   }
 
   /* The Close Button */
