@@ -14,6 +14,7 @@
               <p>
                 <button v-on:click="createFile()">create file</button>
               </p>
+              <p style="color:#ff3a50;">{{createError}}</p>
             </div>
             <div>
               <p class="title">Download a file</p>
@@ -38,8 +39,8 @@
               </p>
               <p>
                 <button v-on:click="uploadFile()">upload file</button>
-                <a style="color:#ff3a50;">{{uploadError}}</a>
               </p>
+              <p style="color:#ff3a50;">{{uploadError}}</p>
             </div>
           </div>
           <div>
@@ -72,8 +73,8 @@
               </p>
               <p>
                 <button v-on:click="copyFile()">copy file</button>
-                <a style="color:#ff3a50;">{{copyError}}</a>
               </p>
+              <p style="color:#ff3a50;">{{copyError}}</p>
             </div>
             <div>
               <p class="title">Move a file</p>
@@ -85,59 +86,66 @@
               </p>
               <p>
                 <button v-on:click="moveFile()">move file</button>
-                <a style="color:#ff3a50;">{{moveError}}</a>
               </p>
+              <p style="color:#ff3a50;">{{moveError}}</p>
             </div>
           </div>
         </div>
       </div>
       <div class="card card-dir">
-        <p class="title">Current directory: <a style="color: #ff3a50;">{{currentPath}}</a></p>
-        <div>
-          <p class="title">Move to another directory ('cd' command)</p>
-          <p><input type="text" :placeholder="currentPath" v-model="cdDirectory"></p>
-          <p>
-            <button v-on:click="cdRequest()">move to directory</button>
-            <a style="color:#ff3a50;">{{cdError}}</a>
-          </p>
-        </div>
-        <div>
-          <p class="title">List all files and directories ('ls' command)</p>
-          <p>directory (optional):
-            <input type="text" v-model="lsDirectory"></p>
-          <p>
-            <button v-on:click="getLs()">list</button>
-          </p>
-          <a v-for="(entity, i) in lsList" :key="i" :style="(entity.color === 'true' ? 'color: #ff3a50;' : 'color: #0864b0;') + 'font-weight:bolder; font-size:18px;'">
-            {{ entity.name }}
-          </a>
-        </div>
-        <div>
-          <p class="title">Make a directory</p>
-          <input type="text" placeholder="absolute name" v-model="mkDirectory">
-          <p>
-            <button v-on:click="mkdirRequest()">make directory</button>
-            <a style="color:#ff3a50;">{{mkError}}</a>
-          </p>
-        </div>
-        <div>
-          <p class="title">Delete a directory</p>
-          <input type="text" placeholder="absolute name" v-model="delDirectory">
-          <p>
-            <button v-on:click="openDeleteConfirmation()">delete directory</button>
-            <a style="color:#ff3a50;">{{delError}}</a>
-          </p>
+        <div class="file-commands">
+          <div>
+            <p class="title">Current directory: <a style="color: #ff3a50;">{{currentPath}}</a></p>
+            <div>
+              <p class="title">Move to another directory ('cd' command)</p>
+              <p><input type="text" :placeholder="currentPath" v-model="cdDirectory"></p>
+              <p>
+                <button v-on:click="cdRequest()">move to directory</button>
+              </p>
+              <p style="color:#ff3a50;">{{cdError}}</p>
+            </div>
+            <div>
+              <p class="title">List all files and directories ('ls' command)</p>
+              <p>directory (optional):
+                <input type="text" v-model="lsDirectory"></p>
+              <p>
+                <button v-on:click="getLs()">list</button>
+              </p>
+              <a v-for="(entity, i) in lsList" :key="i"
+                 :style="(entity.color === 'true' ? 'color: #ff3a50;' : 'color: #0864b0;') + 'font-weight:bolder; font-size:18px;'">
+                {{ entity.name }}
+              </a>
+            </div>
+          </div>
+          <div>
+            <div>
+              <p class="title">Make a directory</p>
+              <input type="text" placeholder="absolute name" v-model="mkDirectory">
+              <p>
+                <button v-on:click="mkdirRequest()">make directory</button>
+              </p>
+              <p style="color:#ff3a50;">{{mkError}}</p>
+            </div>
+            <div>
+              <p class="title">Delete a directory</p>
+              <input type="text" placeholder="absolute name" v-model="delDirectory">
+              <p>
+                <button v-on:click="openDeleteConfirmation()">delete directory</button>
+              </p>
+              <p style="color:#ff3a50;">{{delError}}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!--    <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">-->
-    <!--      <div class="modal-content">-->
-    <!--        <p>Please enter the namenode IP</p>-->
-    <!--        <input type="text" v-model="namenodeIP">-->
-    <!--        <button v-on:click="saveIP()">save</button>-->
-    <!--      </div>-->
-    <!--    </div>-->
+        <div id="initModal" class="modal" :style="isInitOpen ? 'display: block;' : 'display: none;'">
+          <div class="modal-content">
+            <p>Please enter the namenode IP</p>
+            <input type="text" v-model="namenodeIP">
+            <button v-on:click="saveIP()">save</button>
+          </div>
+        </div>
 
     <div id="initConfirmation" class="modal" v-if="initConfirmationOpen">
       <div class="modal-content">
@@ -181,7 +189,7 @@
     data() {
       return {
         isInitOpen: true,
-        namenodeIP: "3.14.7.64:80",
+        namenodeIP: "",
         chunkSize: 1 * 1024 * 1024,
         currentPath: "/",
         directory: "",
@@ -196,6 +204,7 @@
         moveFromFileName: "",
         moveToFileName: "",
         createFileName: "",
+        createError:"",
         datanodeIPsList: {},
         lsDirectory: "",
         cdDirectory: "",
@@ -218,8 +227,8 @@
         copyError: "",
         infoError: "",
         deleteError: "",
-        mkError:"",
-        uploadError:"",
+        mkError: "",
+        uploadError: "",
         datanodeAnswered: false,
       }
     },
@@ -234,7 +243,9 @@
         this.deleteConfirmList = this.lsResponse;
         console.log(this.deleteConfirmList);
         if (this.deleteConfirmList.length === 0) this.deleteDirectory();
-        else this.deleteConfirmationOpen = true;
+        else if ((this.deleteConfirmList.length === 1) && (this.deleteConfirmList[0].name === 'no such directory')) {
+          this.delError = 'no such directory';
+        } else this.deleteConfirmationOpen = true;
       },
       closeAvailable() {
         this.availableShow = false;
@@ -292,10 +303,12 @@
             file.size.toString()
           )
             .then(() => {
+              this.uploadError = "";
               console.log("chunk #" + chunkId + " uploaded successfully");
             })
             .catch(() => {
               console.log("chunk #" + chunkId + " uploading failed");
+              this.uploadError = "Connection error. Please, try again."
               chunksQueue.push(chunkId);
             });
         }
@@ -308,7 +321,7 @@
         this.datanodeAnswered = false;
         let i = 0;
 
-        while((!this.datanodeAnswered) && (i < this.datanodeIPsList.length)){
+        while ((!this.datanodeAnswered) && (i < this.datanodeIPsList.length)) {
           let reqUrl = "http://" + this.datanodeIPsList[i] + "/download";
           await this.downloadRequest(fileName, reqUrl);
           i++;
@@ -484,7 +497,10 @@
             xhr.setRequestHeader("File-Name", fileName);
             xhr.onreadystatechange = () => {
               if (xhr.readyState === 4 && xhr.status === 200) {
+                this.createError = "";
                 resolve();
+              } else {
+                this.createError = "incorrect request";
               }
             };
             xhr.onerror = reject;
@@ -579,7 +595,7 @@
                 });
                 resolve();
               }
-            } else if (xhr.readyState === 4){
+            } else if (xhr.readyState === 4) {
               let tuple = {};
               tuple.name = "no such directory";
               tuple.color = "true";
@@ -683,27 +699,25 @@
   }
 
   .card {
-    width: 600px;
+    width: 45%;
     display: flex;
     flex-flow: column;
     align-items: baseline;
+
+    background-color: aliceblue;
   }
 
-  /*.card-file {*/
-  /*  background-color: rgba(153, 44, 227, 0.1);*/
-  /*}*/
 
   .file-commands {
     display: flex;
     flex-flow: initial;
-    align-items: center;
     justify-content: space-between;
-    width: inherit;
-    /*margin:20px;*/
+    width: 90%;
+    margin: 30px;
   }
 
   .file-commands > div > div, .card-dir > div {
-    margin-bottom: 20px;
+    margin-bottom: 40px;
   }
 
   p {
@@ -719,11 +733,12 @@
   button {
     background-color: white;
     color: black;
-    border: 2px solid 	#089edd;
+    border: 2px solid #089edd;
     padding: 6px 15px;
     font-size: 16px;
     -webkit-transition-duration: 0.4s; /* Safari */
     transition-duration: 0.4s;
+    background-color: aliceblue;
   }
 
   button:hover {
@@ -736,6 +751,7 @@
     border-bottom: 2px solid #089edd;
     padding: 4px;
     font-size: 16px;
+    background-color: aliceblue;
   }
 
   input[type=text]:focus {
